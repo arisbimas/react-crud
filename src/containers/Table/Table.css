@@ -1,0 +1,17 @@
+
+.react-bootstrap-table table {
+    table-layout: auto !important;
+  }
+  table.table-bordered{
+    border:1.3px solid black;
+    margin-top:20px;
+  }
+  table.table-bordered > thead > tr > th{
+    border:1.3px solid black;
+  }
+  table.table-bordered > tbody > tr > td{
+    border:1.3px solid black;
+  }
+  thead{
+    background-color: rgb(186 186 186);
+  }
