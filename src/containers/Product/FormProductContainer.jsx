@@ -41,7 +41,7 @@ class FormProductContainer extends Component {
       )
       .then(
         (result) => {
-          alert(result.data.message);
+          alert("Add Data Success!");
           this.props.history.push("/");
         },
         (err) => {
@@ -58,7 +58,7 @@ class FormProductContainer extends Component {
       )
       .then(
         (result) => {
-          alert(result.data.message);
+          alert("Update Success!");
           this.props.history.push("/");
         },
         (err) => {

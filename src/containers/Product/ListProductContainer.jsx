@@ -1,80 +1,40 @@
-import axios from "axios";
-import React, { Component } from "react";
-import BootstrapTable from "react-bootstrap-table-next";
-import ToolkitProvider, { Search } from "react-bootstrap-table2-toolkit";
-import paginationFactory from "react-bootstrap-table2-paginator";
-import { Link } from "react-router-dom";
-import { Button, Spinner } from "reactstrap";
 import {
   faInfoCircle,
   faPlusCircle,
   faTrashAlt,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Button, Input } from "reactstrap";
+import ReactBootstrapTable2 from "../Table/ReactBootstrapTable2";
 
-const { SearchBar } = Search;
-export default class ListProductContainer extends Component {
-  state = {
-    data: [],
-    isErrorData: false,
-    errDataMsg: "",
-  };
-
-  async getDataFromAPI() {
-    await axios.get(`http://localhost:3000/product`).then(
-      (result) => {
-        this.setState({
-          data: result.data,
-        });
-      },
-      (err) => {
-        console.log("error add data", err);
-        this.setState({
-          isErrorData: true,
-          errDataMsg: err,
-        });
-      }
-    );
-  }
-
-  async deleteData(id) {
-    await axios.delete(`http://localhost:3000/product/${id}`).then(
-      (result) => {
-        alert(result.data.message);
-        this.getDataFromAPI();
-      },
-      (err) => {
-        alert(err);
-      }
-    );
-  }
-
-  handleDelete = (param) => {
-    this.deleteData(param);
-  };
-
-  componentDidMount() {
-    this.getDataFromAPI();
-  }
-
-  render() {
-    const columns_products = [
-      {
-        dataField: "id",
-        text: "Product ID",
-      },
+export default function ListProductContainer() {
+  const [data, setData] = useState([]);
+  const [optTable, setOptTable] = useState({
+    columns: [
       {
         dataField: "name",
-        text: "Product Name",
+        text: "Name Product",
         sort: true,
       },
       {
         dataField: "price",
-        text: "Product Price",
+        text: "Prece",
+        sort: true,
+      },
+      {
+        dataField: "stock",
+        text: "Stock",
+        sort: true,
       },
       {
         dataField: "link",
         text: "Action",
+        headerStyle: () => {
+          return { width: "20%" };
+        },
         formatter: (rowContent, row) => {
           return (
             <div>
@@ -82,12 +42,11 @@ export default class ListProductContainer extends Component {
                 <Button color="info" className="btn-sm m-1">
                   <FontAwesomeIcon icon={faInfoCircle} /> Update
                 </Button>
-                {console.log(rowContent)}
               </Link>
               <Button
                 color="danger"
                 className="btn-sm m-1"
-                onClick={() => this.handleDelete(row.id)}
+                onClick={() => deleteData(row.id)}
               >
                 <FontAwesomeIcon icon={faTrashAlt} /> Delete
               </Button>
@@ -95,48 +54,103 @@ export default class ListProductContainer extends Component {
           );
         },
       },
-    ];
+    ],
+    page: 1,
+    sizePerPage: 10,
+    totalSize: 6, //harusnya didapat dari api, karna api yang kita pakai sekarang tidak ada maka akan saya hardcode.
+    loadingTable: false,
+    search: "",
+  });
 
-    return (
-      <div>
-        <h1>List Product</h1>
-        <Link to="/form-product">
-          <Button color="success">
-            <FontAwesomeIcon icon={faPlusCircle} /> Add Product
-          </Button>
-        </Link>
+  const ListProduct = async (
+    page,
+    size,
+    sortColumn = "price",
+    order = "asc",
+    search = ""
+  ) => {
+    try {
+      if (sortColumn === null) {
+        sortColumn = "id";
+      }
+      setOptTable({ ...optTable, loadingTable: true });
+      let url = await axios.get(
+        `http://localhost:3000/product?q=${search}&_page=${page}&_limit=${size}&_sort=${sortColumn}&_order=${order}`
+      );
+      const res = url.data;
+      setData(res);
+      setOptTable({ ...optTable, page, loadingTable: false });
+    } catch (error) {
+      alert("Error Network!");
+      setOptTable({ ...optTable, loadingTable: false });
+    }
+  };
 
-        {this.state.data.length > 0 ? (
-          <ToolkitProvider
-            bootstrap4
-            keyField="id"
-            data={this.state.data}
-            columns={columns_products}
-            search
-          >
-            {(props) => (
-              <div>
-                <div className="float-right">
-                  <SearchBar {...props.searchProps} />
-                </div>
-                <hr />
-                <BootstrapTable
-                  {...props.baseProps}
-                  pagination={paginationFactory()}
-                />
-              </div>
-            )}
-          </ToolkitProvider>
-        ) : (
-          <div className="text-center">
-            {this.state.isErrorData ? (
-              <h5>{this.state.errDataMsg.toString()}</h5>
-            ) : (
-              <Spinner color="info" />
-            )}
-          </div>
-        )}
-      </div>
+  const deleteData = async (id) => {
+    await axios.delete(`http://localhost:3000/product/${id}`).then(
+      (result) => {
+        alert("Data Deleted!");
+        ListProduct();
+      },
+      (err) => {
+        alert("Err");
+      }
     );
-  }
+  };
+
+  const handleTableChange = (
+    type,
+    { page, sizePerPage, sortField, sortOrder }
+  ) => {
+    const currentIndex = page;
+    setTimeout(() => {
+      ListProduct(currentIndex, sizePerPage, sortField, sortOrder);
+      setOptTable({ ...optTable, sizePerPage, page });
+    }, 2000);
+    setOptTable({ ...optTable, loadingTable: true });
+  };
+
+  const handleSearch = () => {
+    ListProduct(
+      1,
+      optTable.sizePerPage,
+      optTable.sortField,
+      optTable.sortOrder,
+      optTable.search
+    );
+  };
+
+  useEffect(() => {
+    ListProduct(optTable.page, optTable.sizePerPage);
+  }, []);
+
+  return (
+    <>
+      <h1>List Product</h1>
+      <Link to="/form-product">
+        <Button color="success">
+          <FontAwesomeIcon icon={faPlusCircle} /> Add Product
+        </Button>
+      </Link>
+      <div style={{ display: "flex", marginTop: "10px", marginBottom: "10px" }}>
+        <Input
+          value={optTable.search}
+          onChange={(e) => setOptTable({ ...optTable, search: e.target.value })}
+          placeholder="Search..."
+        />
+        <Button primary onClick={handleSearch}>
+          Search
+        </Button>
+      </div>
+      <ReactBootstrapTable2
+        data={data}
+        columns={optTable.columns}
+        page={optTable.page}
+        sizePerPage={optTable.sizePerPage}
+        totalSize={optTable.totalSize}
+        onTableChange={handleTableChange}
+        loading={optTable.loadingTable}
+      />
+    </>
+  );
 }
