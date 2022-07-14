@@ -2,6 +2,11 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+##Preps
+You must install in your local PC
+1. NodeJS => https://nodejs.org/en/
+2. json-server =>  https://www.npmjs.com/package/json-server
+
 ## Available Scripts
 
 In the project directory, you can run in terminal:
