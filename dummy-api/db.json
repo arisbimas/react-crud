@@ -29,6 +29,12 @@
       "name": "Laptop E",
       "price": "14000000",
       "stock": "34"
+    },
+    {
+      "id": 6,
+      "name": "Laptop F",
+      "price": "9000000",
+      "stock": "6"
     }
   ]
 }

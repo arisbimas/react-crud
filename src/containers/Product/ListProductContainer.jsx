@@ -79,6 +79,9 @@ export default function ListProductContainer() {
       );
       const res = url.data;
       setData(res);
+
+      let total = url.headers["x-total-count"];
+
       setOptTable({ ...optTable, page, loadingTable: false });
     } catch (error) {
       alert("Error Network!");
